@@ -4,7 +4,9 @@ run ``` docker-compose up ``` in root directory
 
 ## API usage
 ```127.0.0.1:5000/api/devices/<deviceID>/count```
+
 ```127.0.0.1:5000/api/devices/<deviceID>/maxTemp```
+
 ```127.0.0.1:5000/api/devices/<deviceID>/maxTempPerDay```
 
 ## SQL queries
