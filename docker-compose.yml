@@ -1,0 +1,53 @@
+version: '3.8'
+
+services: 
+  emulator:
+    image: knarz/pubsub-emulator
+    ports: 
+      - "8085:8085"
+
+  mysql:
+    image: mysql:latest
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - ./schema:/docker-entrypoint-initdb.d
+    ports: 
+      - "3306:3306"
+    environment: 
+      - MYSQL_ROOT_PASSWORD=password
+
+  publisher:
+    image: suleimanazhari/publisher:1.0
+    environment: 
+        - PUBSUB_EMULATOR_HOST=emulator:8085
+    depends_on: 
+      - emulator
+  
+  subscriber:
+    image: suleimanazhari/subscriber:1.0
+    environment: 
+      - PUBSUB_EMULATOR_HOST=emulator:8085
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASSWORD=password
+      - DB_NAME=iot_db
+    depends_on: 
+      - mysql
+      - emulator
+      - publisher
+    command: [ "./wait-for-it.sh", "mysql:3306", "-s", "-t", "30", "--", "python", "./subscriber.py" ]
+
+  api:
+    image: suleimanazhari/api:1.0
+    environment: 
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASSWORD=password
+      - DB_NAME=iot_db
+      - FLASK_ENV=development
+    ports:
+      - "5000:5000"
+    depends_on: 
+       - mysql
+    command: [ "./wait-for-it.sh", "mysql:3306", "-s", "-t", "30", "--", "flask", "run" ]
+
